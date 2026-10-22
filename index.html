@@ -1250,6 +1250,55 @@ Step 2: Damage & Destroy Logic (Inside BulletGraph)When the bullet collides with
                  Finally, add an Object: Destroy (This) to remove the bullet from the game.   
                  Important ChecklistMake sure your Zombie prefab has its Tag set to Zombie in the Inspector (capital Z). 
                    On your Bullet prefab, make sure its collider has Is Trigger checked.
+
+          
+The simplest way to create a Start Screen and a Stop (Game Over) screen for an exam is to place two UI panels directly inside your existing scene and control their visibility by freezing or unfreezing game time (Time.timeScale).
+This avoids the hassle of configuring build settings or managing multiple scenes.
+Step 1: Create the UI Canvas & Panels
+In your Hierarchy, right-click \rightarrow UI \rightarrow Canvas.
+Inside the Canvas, create the Start Panel:
+Right-click Canvas \rightarrow UI \rightarrow Panel. Rename it to StartPanel.
+Change its colour in the Inspector to a dark semi-transparent grey or black.
+Right-click StartPanel \rightarrow UI \rightarrow Legacy \rightarrow Text (or TextMeshPro). Type: "ZOMBIE SURVIVAL - PRESS START".
+Right-click StartPanel \rightarrow UI \rightarrow Button. Rename it to StartButton. Set its text child to "START GAME".
+Inside the Canvas, create the Stop / Game Over Panel:
+Right-click Canvas \rightarrow UI \rightarrow Panel. Rename it to GameOverPanel.
+Right-click GameOverPanel \rightarrow UI \rightarrow Legacy \rightarrow Text. Type: "YOU DIED!".
+Right-click GameOverPanel \rightarrow UI \rightarrow Button. Rename it to RestartButton. Set its text child to "PLAY AGAIN".
+In the Inspector, uncheck the checkbox next to the name of GameOverPanel to hide it by default. Keep StartPanel active.
+Step 2: Start Screen Logic (Pause Time on Load)
+Freeze the game at launch so zombies don't spawn or move while the start screen is visible:
+On your Canvas, add a Script Machine component \rightarrow click New \rightarrow name it UIManagerGraph.
+Open the graph and build the launch pause:
+On Start (Event) \rightarrow Time: Set Time Scale (Set value to 0).
+Build the Start Button click:
+In the graph, add On Button Click (Event).
+Set its target object to your StartButton.
+Connect flow \rightarrow Time: Set Time Scale (Set value to 1 so the game resumes).
+Connect flow \rightarrow GameObject: Set Active (Target, Value).
+Set Target to StartPanel.
+Leave Value unchecked (false) to hide the panel.
+Step 3: Stop / Game Over Screen Logic
+Trigger the stop panel when the player runs out of health:
+Open your Player ball's Script Machine graph (where player health is checked).
+Find the If block where health is checked (Health <= 0).
+Instead of loading the scene immediately, wire the If (True) output to:
+Time: Set Time Scale (Set value to 0 to freeze the action).
+GameObject: Set Active (Target, Value):
+Plug your GameOverPanel into Target.
+Check Value to true (making the game over screen appear).
+Step 4: Restart Button Logic
+To restart cleanly after dying:
+Open your UIManagerGraph on the Canvas again.
+Add another On Button Click event:
+Target: RestartButton.
+Connect flow \rightarrow Time: Set Time Scale (Set value back to 1 — crucial, or the restarted game will remain permanently frozen).
+Connect flow \rightarrow Scene Manager: Load Scene (Scene Build Index):
+Set index to 0 (reloads the current scene from scratch).
+Visual Flow Summary
+Game Boots: TimeScale = 0 \rightarrow Start Panel visible \rightarrow Click Start \rightarrow Hide Panel & TimeScale = 1.
+Player Dies: Health <= 0 \rightarrow Show GameOverPanel \rightarrow TimeScale = 0.
+Restart Clicked: TimeScale = 1 \rightarrow Reload Scene 0.
       </pre>
 </body>
 </html>

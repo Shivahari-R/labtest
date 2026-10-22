@@ -1204,5 +1204,52 @@ public class TimeRewind : MonoBehaviour
     </div>
   </div>
 </div>
+<pre color="white">
+Here is how to set up health on the zombie, 
+reduce its health when hit by a bullet, and destroy (despawn) it when its health drops to zero or below.   
+Step 1: Add a Health Variable to the Zombie PrefabIn your Project window (Assets), click on your Zombie prefab.   
+In the Inspector on the right, look at the Variables component.   Add a new variable:   Name: ZombieHealth   
+Type: Integer (or Float)   Value: 20 (or 30 depending on how many hits you want it to take)   
+Step 2: Damage & Destroy Logic (Inside BulletGraph)When the bullet collides with the zombie, the bullet will subtract damage from the zombie's health, check if it reached zero, destroy the zombie if dead, and remove itself. 
+  Open your Bullet prefab's graph (BulletGraph) and add the following:Nodes to Place:On Trigger Enter (Event node)  
+   Collider: Get Game Object (Target: the collider from the trigger event)   Game Object: Compare Tag (Tag: "Zombie")   
+   If (Branch node)   Get Variable (Set variable kind to Object, name: ZombieHealth)   Subtract (Math) (Value B: 10 for bullet damage)  
+    Set Variable (Set variable kind to Object, name: ZombieHealth)   Less or Equal (Math) (Checks if health $\le 0$)   If (Second branch node) 
+      Object: Destroy (Target) (Destroys the zombie)   Object: Destroy (This) (Destroys the bullet)   
+      [On Trigger Enter] ═════════════════════════════════════════════════════════════════════════════════════════════════════════════════► [If] (Branch 1)
+        │ (Collider)                                                                                                                  │ (True)
+        ├─► [Collider: Get Game Object] ───────┬─► [Compare Tag: "Zombie"] ───────────────────────────────────────────────────────────┘
+        │                                      │                                                                                      │
+        │                                      │                                                                                      ▼
+        │                                      ├─► [Get Variable (ZombieHealth)] ──► A ┐                                      [Set Variable (ZombieHealth)]
+        │                                      │                                       [Subtract (Math)] ──► Value ───────────►       │
+        │                                      │                                  10 ──► B ┘                                          │ (Flow)
+        │                                      │                                                                                      ▼
+        │                                      │                                  ┌──► [Less or Equal (<= 0)] ───────────────► [If] (Branch 2)
+        │                                      │                                  │                                                   │ (True)
+        │                                      └──────────────────────────────────┼────────────────────────────────────────┐          │
+        │                                                                         │                                        │          ▼
+        │                                                                         └─(from Set Variable output)             └─► [Object: Destroy (Zombie)]
+        │                                                                                                                             │ (Flow)
+        │                                                                                                                             ▼
+        └────────────────────────────────────────────────────────────────────────────────────────────────────────────────────► [Object: Destroy (This)]
+
+        Step-by-Step Wire Connections:
+        Check if hit object is a zombie:Drag from the Collider port on On Trigger Enter $\rightarrow$ input of Collider: Get Game Object.
+           Drag from Get Game Object $\rightarrow$ Game Object: Compare Tag (Tag: "Zombie").   
+           Plug the boolean output of Compare Tag into the condition of the first If block.   
+           Wire the flow: On Trigger Enter $\rightarrow$ first If.   
+           Reduce Health:Wire the flow: from If (True) $\rightarrow$ Set Variable (ZombieHealth).   
+           On both Get Variable and Set Variable, plug the GameObject output from Collider: 
+           Get Game Object into their Target / Object circle (so it modifies the zombie that was hit, not the bullet).  
+            Plug the output of Get Variable into port A of Subtract. Set B to 10.   
+            Plug the result of Subtract into the Value input of Set Variable.   
+            Check for Death & Disappear:Plug the new health value from Set Variable into input A of Less or Equal. Set B to 0.  
+             Connect flow: Set Variable $\rightarrow$ second If block.   Plug the Less or Equal boolean output into the condition of the second If.
+                From If (True) $\rightarrow$ Object: Destroy (Target). Plug the zombie's GameObject into Target.  
+                 Finally, add an Object: Destroy (This) to remove the bullet from the game.   
+                 Important ChecklistMake sure your Zombie prefab has its Tag set to Zombie in the Inspector (capital Z). 
+                   On your Bullet prefab, make sure its collider has Is Trigger checked.
+      </pre>
 </body>
 </html>
